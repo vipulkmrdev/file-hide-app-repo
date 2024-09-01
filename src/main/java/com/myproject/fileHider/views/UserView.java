@@ -51,6 +51,8 @@ public class UserView {
                     Data file = new Data(0, f.getName(), path, this.email);
                     try {
                         DataDAO.hideFile(file);
+                        System.out.println("File hidden successfully!");
+                        System.out.println();
                     } catch (SQLException e) {
                         e.printStackTrace();
                     } catch (IOException e) {

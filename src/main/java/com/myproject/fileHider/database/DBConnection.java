@@ -1,41 +1,53 @@
 package com.myproject.fileHider.database;
 
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/*
+ * Utility class for managing database connections using HikariCP.
+ * This class provides static methods to obtain and close database connections.
+ */
 public class DBConnection {
 
-    public static Connection connection;
+    // Static data source instance, initialized once and shared across the application
+    private static HikariDataSource dataSource;
 
-    public static Connection getConnection(){
+    // Static block to initialize HikariDataSource when class is first loaded
+    static {
         try {
-            // Load the driver
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            // Configuration of HikariCP
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:mysql://localhost:3306/fileHider?useSSL=true");
+            config.setUsername("root");
+            config.setPassword("root");
+            config.setDriverClassName("com.mysql.cj.jdbc.Driver");
+            config.setMaximumPoolSize(10); // The pool size can be adjusted as needed
+            config.setConnectionTestQuery("SELECT 1"); // Validate connections to ensure they are still valid
 
-            //Creating the connection
-            String url = "jdbc:mysql://localhost:3306/fileHider?useSSL=true";
-            String user = "root";
-            String password = "root";
-            connection = DriverManager.getConnection(url, user, password);
-
-        } catch (ClassNotFoundException e) { // For Class.forName
-            e.printStackTrace();
-        } catch (SQLException e) { // For DriverManager.getConnection
+            // Initialize HikariDataSource with the configuration
+            dataSource = new HikariDataSource(config);
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return connection;
     }
 
-    public static void closeConnection(){
-        if(connection != null){
-            try {
-                connection.close();
-            } catch (SQLException e){
-                e.printStackTrace();
-            }
+    // Private constructor to prevent instantiation
+    private DBConnection() {
+        // Part of singleton-pattern, ensuring only one instance of this class is created
+    }
+
+    // Static method to get a connection from the pool
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+    // Static method to close the data source thus releasing all the resources
+    public static void closeConnection() {
+        if (dataSource != null) {
+            dataSource.close();
         }
     }
 
